@@ -86,7 +86,7 @@ Create a formula property whose value is a [list](https://help.obsidian.md/bases
 The "after" doesn't look all that beautiful yet, but we've achieved our first goal: the card height no longer increases when we add properties. You can inspect-element in the Obsidian debugger to see that all the property values are there on the page, they're just overflowing off the card right now; we'll fix that soon with CSS.
 
 **Notes**
-- In this guide, the formula name for all packed property are prefixed with `packed_`, which allows them to be targeted with shared CSS styles
+- In this guide, the formula name for all packed properties are prefixed with `packed_`, which allows them to be targeted with shared CSS styles
 - The initial name of an Obsidian formula becomes the CSS-targetable name, even after it is renamed; make sure the initial name is correct
 
 **Example Formula:**
@@ -492,4 +492,5 @@ Clicking "+ New" does not pre-populate YAML frontmatter in the new note.
 Clicking "+ New" pre-populates YAML frontmatter in the new note.
 
 ![](images/limitation-frontmatter-workaround.png)
+
 
