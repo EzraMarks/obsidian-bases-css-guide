@@ -43,6 +43,7 @@ Community members have identified several current blockers when customizing Base
 
 > "Since Cards and their contents are layed out using absolute positioning, it is not possible to use regular CSS layouts like flex, grid and auto sizing to change up the layout. And even if the elements are rearanged using other methods, the height of cards is not modifiable which can lead to blank space or overflow."
 > ![](images/tomasweiss-example.jpg)
+> 
 > — TomasWeiss, [Improve compatibility of Bases Cards with CSS Snippets - Obsidian Forum](https://forum.obsidian.md/t/improve-compatibility-of-bases-cards-with-css-snippets/104590)
 
 #### Uncontrollable Card Height Expansion
@@ -50,11 +51,13 @@ Community members have identified several current blockers when customizing Base
 > "Hi, I have a CSS snippet that adds a bit of design to my book cards, but my main problem was that as I added new fields to the card, its height increased, maybe someone has encountered this, how can I reduce the height of all the cards at once."
 > ![](images/flassu-example-wide.jpg)
 > ![](images/flassu-example-close.jpg)
+> 
 > — Flassu, [How change cards height in bases - Obsidian Forum](https://forum.obsidian.md/t/how-change-cards-height-in-bases/105618)
 
 #### No Property-based Styling
 
 > "I want to be able to assign a CSS class to a property, similar to how you can use `cssclasses` in notes... I have a course tracker with a `status` property (Not Started, In Progress, Completed, Dropped). I want to render these as pills, with different colors for each status."
+> 
 > — Gransoni, [Bases: Support CSS Customizations for Properties - Obsidian Forum](https://forum.obsidian.md/t/bases-support-css-customizations-for-properties/104752)
 
 ### The Solution
@@ -489,3 +492,4 @@ Clicking "+ New" does not pre-populate YAML frontmatter in the new note.
 Clicking "+ New" pre-populates YAML frontmatter in the new note.
 
 ![](images/limitation-frontmatter-workaround.png)
+
