@@ -1,0 +1,35 @@
+filters:
+  and:
+    - file.folder.contains("Music Library/")
+formulas:
+  packed_music: |-
+    [
+    link("c: title folder-" + file.folder,
+      title
+    ),
+    link("c: subtitle",
+      if(artists.isEmpty(), "", artists)
+    ),
+    link("c: link-icon",
+       [link(spotify_url)]
+    ),
+    link("c: image-overlay align-bottom-right",
+      link("c: pill margin-small", if(status.isEmpty(), "", status))
+    ),
+    link("c: image-overlay align-top-left",
+      link("c: stack-vertical gap-smaller margin-small",
+        if(tags,
+          tags.map(link("c: tag font-smaller", value.toString().replace("#", ""))),
+          ""
+        )
+      )
+    )
+    ]
+  spacer_1: ""
+views:
+  - type: cards
+    name: Cards
+    order:
+      - formula.packed_music
+      - formula.spacer_1
+    image: note.cover
