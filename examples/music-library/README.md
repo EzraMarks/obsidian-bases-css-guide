@@ -1,8 +1,5 @@
----
-created: 2025-10-08
-modified: 2025-10-08
----
+## Setup Instructions
 
-- Add the "music-library-example-styles.css" file to your enabled CSS snippets
-- Put the "Music Library" folder anywhere in your Obsidian vault
-- Open up the contained Base and play around!
+1. Add `music-library-example-styles.css` to your Obsidian CSS snippets (Settings → Appearance → CSS snippets)
+2. Place the `Music Library` folder anywhere in your Obsidian vault
+3. Open the contained Base and play around!
