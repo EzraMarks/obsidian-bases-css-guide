@@ -8,7 +8,7 @@
 > 
 > **Migration:** See [Current Best Practices](README.md#current-best-practices) in the main README for examples using `html()`.
 > 
-> **Note:** The `link()` approach still works, but Obsidian's November 2025 update changed CSS styling for links, causing multiple link icons to appear. A CSS workaround is available in [issue #1](https://github.com/EzraMarks/obsidian-bases-css-guide/issues/1), though migrating to `html()` is recommended.
+> **Note:** The `link()` approach still works, but Obsidian 1.10.3 changed CSS styling for links, causing multiple link icons to appear. A CSS workaround is available in [issue #1](https://github.com/EzraMarks/obsidian-bases-css-guide/issues/1), though migrating to `html()` is recommended.
 
 
 ---
@@ -31,7 +31,7 @@
 - [Limitations](#limitations)
     - [Pre-Populating YAML Frontmatter in New Note](#pre-populating-yaml-frontmatter-in-new-note)
 
-**Want to play with a working example?** See [examples/legacy-link-approach](examples/legacy-link-approach).
+**Want to play with a working example?** See [examples/legacy-example](examples/legacy-example).
 
 ### Introduction
 
@@ -204,7 +204,7 @@ I have created a set of CSS utility classes like "align-top-left" and "font-smal
 
 ### Full Example
 
-Download this example at [examples/legacy-link-approach](examples/legacy-link-approach).
+Download this example at [examples/legacy-example](examples/legacy-example).
 
 #### Final Result
 

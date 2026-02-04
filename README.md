@@ -3,6 +3,7 @@
 ### Contents
 
 - [Introduction](#introduction)
+- [Important Update](#important-update)
 - [The Problem](#the-problem)
     - [Fixed Heights and Absolute Positioning](#fixed-heights-and-absolute-positioning)
     - [Uncontrollable Card Height Expansion](#uncontrollable-card-height-expansion)
@@ -10,13 +11,14 @@
 - [The Solution](#the-solution)
     - [Packing Properties](#packing-properties)
     - [Adding Spacers](#adding-spacers)
-    - [Using Link Selectors](#using-link-selectors)
-    - [Building Structure with Nested Lists](#building-structure-with-nested-lists)
+    - [Rendering HTML](#rendering-html)
 - [Full Example](#full-example)
+- [CSS Framework Reference](#css-framework-reference)
 - [Limitations](#limitations)
     - [Pre-Populating YAML Frontmatter in New Note](#pre-populating-yaml-frontmatter-in-new-note)
+- [Legacy Approach](#legacy-approach)
 
-**Want to play with a working example?** Download the [examples/music-library](/examples/music-library) folder and follow the contained README.
+**Want to play with a working example?** Download the [examples/current-example](examples/current-example) folder and follow the contained README.
 
 ### Introduction
 
@@ -34,6 +36,12 @@ In the following screenshots, note the following which were not previously possi
 ![](images/full-example-wide.png)
 
 ![](images/full-example-close.png)
+
+### Important Update
+
+**Obsidian 1.10.3 (November 11, 2025) introduced an `html()` function** that renders arbitrary HTML directly in formulas. This is now the recommended approach for building card layouts, as it allows for writing more standard HTML and CSS, without fighting Obsidian default styles.
+
+**The original `link()` technique** still works but requires additional CSS to fix link icon issues also introduced in this update. See [LEGACY-README.md](LEGACY-README.md) for details.
 
 ### The Problem
 
@@ -62,16 +70,15 @@ Community members have identified several current blockers when customizing Base
 
 ### The Solution
 
-The solution is powered by four core techniques, which can be combined to create just about any CSS and HTML layout:
+The solution is powered by three core techniques, which can be combined to create any CSS and HTML layout:
 
-- **Packing Properties** — combine all visible property values into a [list](https://help.obsidian.md/bases/functions#List) in one formula, so the card’s intrinsic height comes from a single property only
-- **Adding Spacers** — add deliberate vertical space in a coarse-grain but predicable way
-- **Using Links Selectors** — use the [link function](https://help.obsidian.md/bases/functions#Link) href value as a targetable CSS attribute, equivalent to a CSS class
-- **Building Structure with Nested Lists** —  construct HTML DOM structure by nesting lists and links inside the formula; this gives you relative positioning and clean layout control
+- **Packing Properties** — combine all visible property values into one formula, so the card's intrinsic height comes from a single property only
+- **Adding Spacers** — add deliberate vertical space in a coarse-grain but predictable way
+- **Rendering HTML** — use the `html()` function with template strings to render arbitrary HTML and CSS with dynamic data
 
 #### Packing Properties
 
-Create a formula property whose value is a [list](https://help.obsidian.md/bases/functions#List) containing every value you plan to display on the card. This keeps the card’s height fixed, rather than increasing when more properties are added.
+Create a formula property containing every value you plan to display on the card. This keeps the card's height fixed, rather than increasing when more properties are added.
 
 **Before:**
 
@@ -80,26 +87,26 @@ Create a formula property whose value is a [list](https://help.obsidian.md/bases
 
 **After:**
 
-| ![](images/packing-properties-view-after.png) | ![](images/packing-properties-properties-after.png) | ![](images/packing-properties-formula.png) |
+| ![](images/packing-properties-view-after.png) | ![](images/packing-properties-properties-after.png) | ![](images/packing-properties-formula-html.png) |
 | -------------------------------------- | -------------------------------------------- | ----------------------------------- |
 
-The "after" doesn't look all that beautiful yet, but we've achieved our first goal: the card height no longer increases when we add properties. You can inspect-element in the Obsidian debugger to see that all the property values are there on the page, they're just overflowing off the card right now; we'll fix that soon with CSS.
+The "after" doesn't look all that beautiful yet, but we've achieved our first goal: the card height no longer increases when we add properties. All the property values are there on the page, they're just overflowing off the card right now; we'll fix that soon with CSS.
 
 **Notes**
+- In this guide, the formula name for all packed properties are prefixed with `packed_`, which allows them to be targeted with shared CSS styles
 - In this guide, the formula name for all packed properties are prefixed with `packed_`, which allows them to be targeted with shared CSS styles
 - The initial name of an Obsidian formula becomes the CSS-targetable name, even after it is renamed; make sure the initial name is correct
 
 **Example Formula:**
 
-```
-[
-title,
-artists,
-spotify_url,
-status,
-tags
-]
-
+```javascript
+html(
+    "<div>" + title + "</div>" +
+    "<div>" + artists + "</div>" +
+    "<div>" + url + "</div>" +
+    "<div>" + status + "</div>" +
+    "<div>" + tags + "</div>"
+)
 ```
 
 #### Adding Spacers
@@ -115,84 +122,110 @@ In this guide, the spacers are named with the `spacer_` prefix, to allow for sha
 
 CSS to hide spacers:
 
-```
+```css
 .bases-cards-property[data-property^="formula.spacer"] {
   display: none;
 }
 ```
 
-#### Using Link Selectors
+#### Rendering HTML
 
-Inside a formula, the [link function](https://help.obsidian.md/bases/functions#Link) can be exploited to be incredibly powerful: it can create a new HTML element with a targetable CSS attribute.
+The `html()` function allows you to render arbitrary HTML in your formulas.
 
-The `link()` function takes two arguments: the `path` and the `value`. The `path` becomes the href of an HTML link, which is a targetable attribute in CSS. The `value` becomes the contents of the link, which can be text or nested HTML elements.
+**Basic Usage:**
 
-If all of that sounded like gobbledygook, here's what it looks like in practice:
-
-```
-[
-link("c: title folder-" + file.folder, title),
-link("c: subtitle", artists),
-link("c: link-icon", spotify_url),
-link("c: status-pill", status),
-link("c: tags", tags)
-]
+```javascript
+html("<div class='title'>My Title</div>")
 ```
 
-We prefix paths with "c:" (short for "class") so they're parsed as valid hrefs—anything that looks like a protocol scheme works, but this guide always uses "c:". Then, we add space-separated flags (like "title" or "status-pill"), similar to how you would list multiple class names in HTML.
+**With Property Values:**
 
-With this structure, we can write simple CSS selectors like the following:
-
-```
-.bases-cards-property[data-property^="formula.packed"] a[href~="title"] {
-  /* Your CSS here */
-}
+```javascript
+html("<div class='title'>" + title + "</div>")
 ```
 
-We can also write much more powerful CSS selectors. Notice how our first link has the following href/path: `"c: title folder-" + file.folder`. This is concatenating the folder path onto a "folder-" prefix, allowing us to have different CSS styles depending on which folder the note is in:
+**The Template String Pattern:**
 
+Build HTML templates with placeholders like `{title}`, then use `.replace()` to populate them:
+
+```javascript
+html(
+  (
+    "<div class='title'>{title}</div>" +
+    "<div class='subtitle'>{subtitle}</div>"
+  )
+    .replace("{title}", title)
+    .replace("{subtitle}", subtitle)
+)
 ```
-.bases-cards-property[data-property^="formula.packed"] a[href~="title"][href~="folder-Catalogs/Music/Albums"]::before {
-    /* Your CSS here */
-}
+
+This separates structure (HTML template) from data (property values), making formulas more readable and easier to modify. The `.replace()` pattern also lets you handle conditional content, arrays, and other dynamic data:
+
+**Conditional Content:**
+
+Show fallback values when properties are empty.
+
+```javascript
+.replace("{status}", if(status, status, "None"))
 ```
 
-#### Building Structure with Nested Lists
+**Array Mapping:**
 
-While creating a list of targetable link elements is very powerful, it still does not allow for every kind of relative positioning; for that, we need to be able to create a nested HTML structure. By combining lists and links, we can create any HTML structure imaginable.
+Transform arrays properties into HTML.
 
-Here is the formula for the packed property I am currently using for my music library:
-
-```
-[
-link("c: title folder-" + file.folder,
-  title
-),
-link("c: subtitle",
-  if(artists.isEmpty(), "", artists)
-),
-link("c: link-icon",
-   [link(spotify_url)]
-),
-link("c: image-overlay align-bottom-right",
-  link("c: pill margin-small", if(status.isEmpty(), "", status))
-),
-link("c: image-overlay align-top-left",
-  link("c: stack-vertical gap-smaller margin-small",
-    if(tags,
-      tags.map(link("c: tag font-smaller", value.toString().replace("#", ""))),
-      ""
-    )
+```javascript
+.replace("{tags}",
+  if(tags,
+    tags.map(
+      "<div class='tag'>" + value.toString() + "</div>"
+    ).join(""),
+    ""
   )
 )
-]
 ```
 
-I have created a set of CSS utility classes like "align-top-left" and "font-smaller", which allow for controlling the styling of a property right from the formula editor, without defining new CSS classes. Using utility classes like this is completely optional and a matter of personal preference.
+**Complex Nested Layouts:**
+
+Combine techniques to build complete card layouts.
+
+```javascript
+html(
+  (
+    "<div class='cover-overlay aspect-square'>" +
+      "<div class='align-top-left'>" +
+        "<div class='stack-vertical'>{tags}</div>" +
+      "</div>" +
+      "<div class='align-bottom-right'>" +
+        "<div class='pill'>{status}</div>" +
+      "</div>" +
+    "</div>"
+  )
+    .replace("{tags}",
+      if(tags,
+        tags.map(
+          "<div class='tag'>" + value.toString() + "</div>"
+        ).join(""),
+        ""
+      )
+    )
+    .replace("{status}", if(status, status, "None"))
+)
+```
+
+**Wikilink Conversion:**
+
+Obsidian wikilinks do not work when rendered as HTML; they become plain text like "[[My Note]]". Use this regex pattern to convert them into clickable HTML links whenever you need wikilinks displayed on cards.
+
+```javascript
+.replace(/\[\[([^\|\]]+)\|([^\]]+)\]\]/g, 
+  "<a href='obsidian://open?file=$1'>$2</a>")
+.replace(/\[\[([^\]]+)\]\]/g, 
+  "<a href='obsidian://open?file=$1'>$1</a>")
+```
 
 ### Full Example
 
-Download this example at [examples/music-library](https://github.com/EzraMarks/obsidian-bases-css-guide/blob/main/examples/music-library).
+Download this example at [examples/current-example](examples/current-example).
 
 #### Final Result
 
@@ -200,35 +233,45 @@ Download this example at [examples/music-library](https://github.com/EzraMarks/o
 
 #### Properties
 
-| ![](images/full-example-properties.png) | ![](images/full-example-formula.png) | ![](images/spacers-formula.png) |
+| ![](images/full-example-properties.png) | ![](images/full-example-formula-html.png) | ![](images/spacers-formula.png) |
 | -------------------------------- | ----------------------------- | ------------------------ |
 
 <details>
 <summary>View Formula for "packed_music" Property</summary>
 
 <pre><code>
-[
-link("c: title folder-" + file.folder,
-  title
-),
-link("c: subtitle",
-  if(artists.isEmpty(), "", artists)
-),
-link("c: link-icon",
-   [link(spotify_url)]
-),
-link("c: image-overlay align-bottom-right",
-  link("c: pill margin-small", if(status.isEmpty(), "", status))
-),
-link("c: image-overlay align-top-left",
-  link("c: stack-vertical gap-smaller margin-small",
-    if(tags,
-      tags.map(link("c: tag font-smaller", value.toString().replace("#", ""))),
-      ""
-    )
+html(
+  (
+    "&lt;div class='title title-icon folder-{folder}'&gt;{title}&lt;/div&gt;" +
+    "&lt;div class='subtitle'&gt;{artists}&lt;/div&gt;" +
+    "&lt;div class='link-icon'&gt;" +
+      "&lt;a href='{link}' target='_blank'&gt;&lt;/a&gt;" +
+    "&lt;/div&gt;" +
+    "&lt;div class='cover-overlay aspect-square'&gt;" +
+      "&lt;div class='align-top-left'&gt;" +
+        "&lt;div class='stack-vertical gap-smaller margin-medium'&gt;{tags}&lt;/div&gt;" +
+      "&lt;/div&gt;" +
+      "&lt;div class='align-bottom-right'&gt;" +
+        "&lt;div class='pill margin-medium'&gt;{status}&lt;/div&gt;" +
+      "&lt;/div&gt;" +
+    "&lt;/div&gt;"
   )
+    .replace("{folder}", file.folder)
+    .replace("{title}", title)
+    .replace("{artists}", if(artists, artists, []).join(", "))
+    .replace("{link}", spotify_url)
+    .replace("{tags}",
+      if(tags,
+        tags.map("&lt;div class='tag font-smaller'&gt;" + value.toString().replace("#", "") + "&lt;/div&gt;").join(""),
+        ""
+      )
+    )
+    .replace("{status}", if(status, status, ""))
+    .replace(/\[\[([^\|\]]+)\|([^\]]+)\]\]/g,
+      "&lt;a href='obsidian://open?file=$1'&gt;$2&lt;/a&gt;")
+    .replace(/\[\[([^\]]+)\]\]/g,
+      "&lt;a href='obsidian://open?file=$1'&gt;$1&lt;/a&gt;")
 )
-]
 </code></pre>
 </details>
 
@@ -239,50 +282,22 @@ link("c: image-overlay align-top-left",
 
 <pre><code class="language-css">
 /*
-Obsidian Bases Cards CSS Guide
+Obsidian Bases Cards CSS
 https://github.com/EzraMarks/obsidian-bases-css-guide
 
 This CSS enables advanced card layouts for Obsidian Bases using the "property packing" technique
 and other techniques described in the README of the above repo.
 
 Structure:
-- Core Setup: Required CSS for property packing technique
-- Starter Styles: Optional utility classes
-- Example Implementation: CSS for the music library example
+- Core Setup (required): CSS for property packing technique
+- Everything else (optional): Utility classes and pre-styled components
 
 Conventions:
 - Formula properties prefixed with "packed_" for packed properties
 - Formula properties prefixed with "spacer_" for adding vertical space
-- Link hrefs prefixed with "c:" (short for "classes") to act as CSS selectors
 */
 
-/* ======== Core Setup (recommended for property packing technique) ======== */
-
-/* Allow overflow so elements can use absolute positioning beyond card boundaries */
-.bases-cards-property[data-property^="formula.packed"] .bases-cards-line,
-.bases-cards-property[data-property^="formula.packed"] {
-    overflow: visible;
-}
-
-/* Preserve normal formatting when packed properties appear in title position;
-   without this, Obsidian would apply title-specific styles */
-.bases-cards-property.mod-title[data-property^="formula.packed"] {
-    --link-color: revert;
-    --link-unresolved-color: revert;
-    --link-unresolved-opacity: revert;
-    --link-decoration: revert;
-    --link-weight: revert;
-    pointer-events: revert;
-    font-weight: revert;
-}
-
-/* Remove link styling from all "c:" prefixed hrefs; we are using links to exploit the
-   href attribute as a CSS selector, but we want the element to behave like a regular span */
-.bases-cards-property[data-property^="formula.packed"] a[href^="c:"] {
-    color: var(--text-normal);
-    pointer-events: none;
-    text-decoration: none;
-}
+/* ======== Core Setup (required for property packing technique) ======== */
 
 /* Make spacer properties invisible; these properties are prefixed with the name "spacer"
    and only serve to add height to the card */
@@ -290,7 +305,211 @@ Conventions:
     display: none;
 }
 
-/* ======== Starter Styles (optional utility CSS) ======== */
+/* Allow overflow so elements can use absolute positioning beyond card boundaries */
+.bases-cards-property[data-property^="formula.packed"] {
+    overflow: visible;
+
+    .bases-cards-line {
+        overflow: visible;
+    }
+
+    /* Preserve normal formatting when packed properties appear in title position;
+       without this, Obsidian would apply title-specific styles */
+    &.mod-title {
+        --link-color: revert;
+        --link-unresolved-color: revert;
+        --link-unresolved-opacity: revert;
+        --link-decoration: revert;
+        --link-weight: revert;
+        font-weight: revert;
+        pointer-events: auto;
+    }
+
+    /* ======== Cover Overlay & Positioning ======== */
+
+    /* Position a container over the card's cover image */
+    .cover-overlay {
+        position: absolute;
+        left: 0;
+        bottom: var(--bases-cards-bottom-offset);
+        display: flex;
+        width: 100%;
+        overflow: hidden;
+
+        &.aspect-square {
+            aspect-ratio: 1 / 1;
+        }
+
+        &.aspect-2\/3 {
+            aspect-ratio: 2 / 3;
+        }
+
+        /* Alignment positions for content within the overlay */
+
+        >.align-top-left {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+        }
+
+        >.align-bottom-left {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-end;
+        }
+
+        >.align-bottom-right {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-end;
+        }
+    }
+
+    /* ======== Layout Utilities ======== */
+
+    .stack-horizontal {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+    }
+
+    .stack-vertical {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .space-between {
+        justify-content: space-between;
+    }
+
+    .gap-smaller {
+        gap: var(--size-2-1);
+    }
+
+    .gap-small {
+        gap: var(--size-2-2);
+    }
+
+    .gap-medium {
+        gap: var(--size-2-3);
+    }
+
+    .margin-small {
+        margin: var(--size-2-2);
+    }
+
+    .margin-medium {
+        margin: var(--size-2-3);
+    }
+
+    .margin-top-small {
+        margin-top: var(--size-2-2);
+    }
+
+    /* Pull element upward with negative margin */
+    .margin-top-negative-large {
+        margin-top: calc(-1 * var(--size-4-2));
+    }
+
+    /* ======== Text Utilities ======== */
+
+    .font-smaller {
+        font-size: var(--font-smaller) !important;
+    }
+
+    /* Prevent text wrapping with ellipsis overflow */
+    .no-wrap {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Limit text to 2 lines with ellipsis overflow */
+    .subtitle.wrap-2 {
+        font-size: var(--font-small);
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-wrap: pretty;
+    }
+
+    /* ======== Components ======== */
+
+    .tag {
+        display: inline-block;
+        background-color: color-mix(in srgb, var(--color-accent-2) 56%, black 22%);
+        color: color-mix(in srgb, var(--color-accent-2) 10%, white 100%);
+        box-shadow: var(--shadow-s);
+        border-radius: var(--tag-radius);
+        padding: var(--tag-padding-y) var(--tag-padding-x);
+    }
+
+    .pill:not(:empty) {
+        padding: 0.3em 0.75em;
+        background: var(--custom-bases-overlay-background-color);
+        color: var(--custom-bases-overlay-text-color);
+        font-weight: 600;
+        border-radius: 9999px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .title {
+        margin-bottom: var(--size-2-2);
+        font-weight: calc(var(--font-weight) + var(--bold-modifier));
+        color: var(--text-normal);
+        font-size: 0.9em;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-wrap: pretty;
+    }
+
+    .subtitle {
+        font-size: var(--font-small);
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* Adds an icon before title text (requires additional CSS for specific icons) */
+    .title-icon::before {
+        display: inline-block;
+        content: "";
+        height: 1.1em;
+        margin-right: var(--size-2-3);
+        aspect-ratio: 1;
+        background-color: var(--text-muted);
+        mask-size: contain;
+        mask-position: center;
+        mask-repeat: no-repeat;
+        vertical-align: middle;
+        margin-top: -3px;
+        /* Fine-tune alignment with text baseline */
+    }
+}
+
+/* ======== Base Variables ======== */
 
 .bases-cards-item {
     /* CSS variable, useful for absolute positioning from bottom of cover image */
@@ -308,170 +527,31 @@ Conventions:
     --custom-bases-overlay-background-color: var(--background-primary);
     --custom-bases-overlay-text-color: var(--text-color);
 }
-
-/* image-overlay: position a container over the card's cover image (assuming square aspect ratio)
-   Example usage: link("c: image-overlay", content) */
-.bases-cards-property[data-property^="formula.packed"] a[href~="image-overlay"] {
-    position: absolute;
-    left: 0;
-    bottom: var(--bases-cards-bottom-offset);
-    display: flex;
-    width: 100%;
-    /* Matches square cards - change to match your card aspect ratio */
-    aspect-ratio: 1;
-}
-
-/* align-top-left: align content to top-left corner
-   Example usage: link("c: image-overlay align-top-left", content) */
-.bases-cards-property[data-property^="formula.packed"] a[href~="align-top-left"] {
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-start;
-}
-
-/* align-bottom-right: align content to bottom-right corner
-   Example usage: link("c: image-overlay align-bottom-right", content) */
-.bases-cards-property[data-property^="formula.packed"] a[href~="align-bottom-right"] {
-    display: flex;
-    justify-content: flex-end;
-    align-items: flex-end;
-}
-
-/* stack-vertical: stack child elements vertically
-   Example usage: link("c: stack-vertical", [item1, item2, item3]) */
-.bases-cards-property[data-property^="formula.packed"] a[href~="stack-vertical"]>.value-list-container {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-/* gap-small: set small gap between child elements
-   Example usage: link("c: stack-vertical gap-small", list) */
-.bases-cards-property[data-property^="formula.packed"] a[href~="gap-small"]>.value-list-container {
-    gap: var(--size-2-2);
-}
-
-/* gap-smaller: set smaller gap between child elements
-   Example usage: link("c: stack-vertical gap-smaller", list) */
-.bases-cards-property[data-property^="formula.packed"] a[href~="gap-smaller"]>.value-list-container {
-    gap: var(--size-2-1);
-}
-
-/* margin-small: set small margin around element
-   Example usage: link("c: pill margin-small", status) */
-.bases-cards-property[data-property^="formula.packed"] a[href~="margin-small"] {
-    margin: var(--size-2-3);
-}
-
-/* font-smaller: set font size to Obsidian smaller font
-   Example usage: link("c: tag font-smaller", tagName) */
-.bases-cards-property[data-property^="formula.packed"] a[href~="font-smaller"] {
-    font-size: var(--font-smaller);
-}
-
-/* title: main card title with line wrap and ellipsis overflow
-   Example usage: link("c: title", title) */
-.bases-cards-property[data-property^="formula.packed"] a[href~="title"] {
-    margin-bottom: var(--size-2-2);
-    font-weight: calc(var(--font-weight) + var(--bold-modifier));
-    color: var(--text-normal);
-    font-size: 0.9em;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-wrap: pretty;
-}
-
-/* subtitle: card subtitle with ellipsis overflow
-   Example usage: link("c: subtitle", artists) */
-.bases-cards-property[data-property^="formula.packed"] a[href~="subtitle"] {
-    font-size: var(--font-small);
-    line-height: 2;
-    display: block;
-}
-
-.bases-cards-property[data-property^="formula.packed"] a[href~="subtitle"] .value-list-container {
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* pill: rounded status pill
-   Example usage: link("c: pill margin-small", status) */
-.bases-cards-property[data-property^="formula.packed"] a[href~="pill"]:not(:empty) {
-    padding: 4px 10px;
-    background: var(--custom-bases-overlay-background-color);
-    color: var(--custom-bases-overlay-text-color);
-    font-weight: 600;
-    border-radius: 9999px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    font-size: 0.9rem;
-}
-
-/* tag: rounded pill with accent coloring
-   Example usage: tags.map(link("c: tag font-smaller", value)) */
-.bases-cards-property[data-property^="formula.packed"] a[href~="tag"] {
-    display: inline-block;
-    background-color: color-mix(in srgb, var(--color-accent-2) 56%, black 22%);
-    color: color-mix(in srgb, var(--color-accent-2) 10%, white 100%);
-    box-shadow: var(--shadow-s);
-    border-radius: var(--tag-radius);
-    padding: var(--tag-padding-y) var(--tag-padding-x);
-}
-
-/* ======== Example Implementation (styles specific to the Music Library example) ======== */
-
-.bases-cards-property[data-property^="formula.packed"] a[href~="subtitle"] {
-    width: calc(100% - 32px);
-    /* Leave space for link icon */
-}
-
-/* link-icon: clickable link icon, positioned at the bottom right of the card
-   Example usage: link("c: link-icon", link(your_url_property))
-   Note that nested link pattern is required - outer link positions, inner link provides the URL */
-.bases-cards-property[data-property^="formula.packed"] a[href~="link-icon"] a {
-    pointer-events: auto;
-    /* Re-enable clicking for this specific link */
-    position: absolute;
-    right: 8px;
-    bottom: -46px;
-    width: 18px;
-    aspect-ratio: 1;
-    background-color: var(--text-normal);
-    color: var(--text-normal);
-    mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>');
-}
-
-/* Title type icons - base style for folder-based icons */
-.bases-cards-property[data-property^="formula.packed"] a[href~="title"][href*="folder-"]::before {
-    display: inline-block;
-    content: "";
-    height: 1.1em;
-    margin-right: var(--size-2-3);
-    aspect-ratio: 1;
-    background-color: var(--text-muted);
-    mask-size: contain;
-    mask-position: center;
-    mask-repeat: no-repeat;
-    vertical-align: middle;
-    margin-top: -3px;
-    /* Fine-tune alignment with text baseline */
-}
-
-/* Album icon - specific to folder path that contains "Music Library/Albums".
-   Note that a better selector would be [href~="folder-Music Library/Albums"],
-   but the following less-specific selector allows the example folder to be under any parent folder */
-.bases-cards-property[data-property^="formula.packed"] a[href~="title"][href*="folder-"][href*="Music Library/Albums"]::before {
-    mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-5.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>');
-}
-
-/* Track icon - specific to folder path that contains "Music Library/Tracks" */
-.bases-cards-property[data-property^="formula.packed"] a[href~="title"][href*="folder-"][href*="Music Library/Tracks"]::before {
-    mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>');
-}
 </code></pre>
 </details>
+
+### CSS Framework Reference
+
+The included CSS demonstrates useful patterns for utility classes and components. Use these as a starting point and build your own classes as needed.
+
+**Layout Classes:**
+- `.cover-overlay` with `.aspect-square` or `.aspect-2/3` - Container for positioning elements over cover image
+- `.align-top-left`, `.align-bottom-left`, `.align-bottom-right` - Position children within overlay
+- `.stack-horizontal`, `.stack-vertical` - Flexbox stacks
+- `.space-between` - Justify content with space between
+
+**Component Classes:**
+- `.title` - Card title with 2-line clamping
+- `.subtitle` - Smaller text with ellipsis overflow
+- `.pill` - Rounded status badge
+- `.tag` - Inline tag with accent coloring
+
+**Utility Classes:**
+- `.gap-smaller`, `.gap-small`, `.gap-medium` - Flex gaps
+- `.margin-small`, `.margin-medium`, `.margin-top-small` - Margins
+- `.margin-top-negative-large` - Pull element upward with negative margin
+- `.font-smaller` - Smaller font size
+- `.no-wrap` - Text truncation with ellipsis
 
 ### Limitations
 
@@ -494,3 +574,13 @@ Clicking "+ New" pre-populates YAML frontmatter in the new note.
 ![](images/limitation-frontmatter-workaround.png)
 
 
+
+### Legacy Approach
+
+The original version of this guide used the `link()` function with custom href attributes as CSS selectors. This approach still works but requires additional CSS workarounds due to the November 2025 update.
+
+**For the complete legacy guide**, see [LEGACY-README.md](LEGACY-README.md).
+
+**For a working legacy example**, see [examples/legacy-example](examples/legacy-example).
+
+The `html()` function approach is recommended for all new projects.

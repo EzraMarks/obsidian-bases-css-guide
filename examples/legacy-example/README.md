@@ -10,7 +10,7 @@ Obsidian has since released an `html()` function that allows for standard HTML/C
 
 ## Known Issue
 
-Obsidian's November 2025 update causes multiple link icons to appear. See [issue #1](https://github.com/EzraMarks/obsidian-bases-css-guide/issues/1) for a CSS workaround.
+A November 2025 update causes multiple link icons to appear. See [issue #1](https://github.com/EzraMarks/obsidian-bases-css-guide/issues/1) for a CSS workaround.
 
 ## Setup Instructions
 

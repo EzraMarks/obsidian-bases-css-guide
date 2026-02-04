@@ -1,0 +1,246 @@
+/*
+Obsidian Bases Cards CSS
+https://github.com/EzraMarks/obsidian-bases-css-guide
+
+This CSS enables advanced card layouts for Obsidian Bases using the "property packing" technique
+and other techniques described in the README of the above repo.
+
+Structure:
+- Core Setup (required): CSS for property packing technique
+- Everything else (optional): Utility classes and pre-styled components
+
+Conventions:
+- Formula properties prefixed with "packed_" for packed properties
+- Formula properties prefixed with "spacer_" for adding vertical space
+*/
+
+/* ======== Core Setup (required for property packing technique) ======== */
+
+/* Make spacer properties invisible; these properties are prefixed with the name "spacer"
+   and only serve to add height to the card */
+.bases-cards-property[data-property^="formula.spacer"] {
+    display: none;
+}
+
+/* Allow overflow so elements can use absolute positioning beyond card boundaries */
+.bases-cards-property[data-property^="formula.packed"] {
+    overflow: visible;
+
+    .bases-cards-line {
+        overflow: visible;
+    }
+
+    /* Preserve normal formatting when packed properties appear in title position;
+       without this, Obsidian would apply title-specific styles */
+    &.mod-title {
+        --link-color: revert;
+        --link-unresolved-color: revert;
+        --link-unresolved-opacity: revert;
+        --link-decoration: revert;
+        --link-weight: revert;
+        font-weight: revert;
+        pointer-events: auto;
+    }
+
+    /* ======== Cover Overlay & Positioning ======== */
+
+    /* Position a container over the card's cover image */
+    .cover-overlay {
+        position: absolute;
+        left: 0;
+        bottom: var(--bases-cards-bottom-offset);
+        display: flex;
+        width: 100%;
+        overflow: hidden;
+
+        &.aspect-square {
+            aspect-ratio: 1 / 1;
+        }
+
+        &.aspect-2\/3 {
+            aspect-ratio: 2 / 3;
+        }
+
+        /* Alignment positions for content within the overlay */
+
+        >.align-top-left {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+        }
+
+        >.align-bottom-left {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-end;
+        }
+
+        >.align-bottom-right {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-end;
+        }
+    }
+
+    /* ======== Layout Utilities ======== */
+
+    .stack-horizontal {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+    }
+
+    .stack-vertical {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .space-between {
+        justify-content: space-between;
+    }
+
+    .gap-smaller {
+        gap: var(--size-2-1);
+    }
+
+    .gap-small {
+        gap: var(--size-2-2);
+    }
+
+    .gap-medium {
+        gap: var(--size-2-3);
+    }
+
+    .margin-small {
+        margin: var(--size-2-2);
+    }
+
+    .margin-medium {
+        margin: var(--size-2-3);
+    }
+
+    .margin-top-small {
+        margin-top: var(--size-2-2);
+    }
+
+    /* Pull element upward with negative margin */
+    .margin-top-negative-large {
+        margin-top: calc(-1 * var(--size-4-2));
+    }
+
+    /* ======== Text Utilities ======== */
+
+    .font-smaller {
+        font-size: var(--font-smaller) !important;
+    }
+
+    /* Prevent text wrapping with ellipsis overflow */
+    .no-wrap {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Limit text to 2 lines with ellipsis overflow */
+    .subtitle.wrap-2 {
+        font-size: var(--font-small);
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-wrap: pretty;
+    }
+
+    /* ======== Components ======== */
+
+    .tag {
+        display: inline-block;
+        background-color: color-mix(in srgb, var(--color-accent-2) 56%, black 22%);
+        color: color-mix(in srgb, var(--color-accent-2) 10%, white 100%);
+        box-shadow: var(--shadow-s);
+        border-radius: var(--tag-radius);
+        padding: var(--tag-padding-y) var(--tag-padding-x);
+    }
+
+    .pill:not(:empty) {
+        padding: 0.3em 0.75em;
+        background: var(--custom-bases-overlay-background-color);
+        color: var(--custom-bases-overlay-text-color);
+        font-weight: 600;
+        border-radius: 9999px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .title {
+        margin-bottom: var(--size-2-2);
+        font-weight: calc(var(--font-weight) + var(--bold-modifier));
+        color: var(--text-normal);
+        font-size: 0.9em;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-wrap: pretty;
+    }
+
+    .subtitle {
+        font-size: var(--font-small);
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* Adds an icon before title text (requires additional CSS for specific icons) */
+    .title-icon::before {
+        display: inline-block;
+        content: "";
+        height: 1.1em;
+        margin-right: var(--size-2-3);
+        aspect-ratio: 1;
+        background-color: var(--text-muted);
+        mask-size: contain;
+        mask-position: center;
+        mask-repeat: no-repeat;
+        vertical-align: middle;
+        margin-top: -3px;
+        /* Fine-tune alignment with text baseline */
+    }
+}
+
+/* ======== Base Variables ======== */
+
+.bases-cards-item {
+    /* CSS variable, useful for absolute positioning from bottom of cover image */
+    --bases-cards-bottom-offset: calc(var(--bases-cards-line-height) + 8px);
+}
+
+/* Theme-specific overlay colors for pills and tags; provides high contrast overlays
+   that work in both light and dark themes */
+.theme-light {
+    --custom-bases-overlay-background-color: color-mix(in srgb, var(--text-normal) 70%, transparent);
+    --custom-bases-overlay-text-color: var(--background-primary);
+}
+
+.theme-dark {
+    --custom-bases-overlay-background-color: var(--background-primary);
+    --custom-bases-overlay-text-color: var(--text-color);
+}

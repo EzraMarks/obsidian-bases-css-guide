@@ -1,0 +1,46 @@
+filters:
+  or:
+    - file.folder.contains("Music Library/Albums")
+    - file.folder.contains("Music Library/Tracks")
+formulas:
+  packed_music: |-
+    html(
+      (
+        "<div class='title title-icon folder-{folder}'>{title}</div>" +
+        "<div class='subtitle'>{artists}</div>" +
+        "<div class='link-icon'>" +
+          "<a href='{link}' target='_blank'></a>" +
+        "</div>" +
+        "<div class='cover-overlay aspect-square'>" +
+          "<div class='align-top-left'>" +
+            "<div class='stack-vertical gap-smaller margin-small'>{tags}</div>" +
+          "</div>" +
+          "<div class='align-bottom-right'>" +
+            "<div class='pill margin-small'>{status}</div>" +
+          "</div>" +
+        "</div>"
+      )
+        .replace("{folder}", file.folder)
+        .replace("{title}", title)
+        .replace("{artists}", if(artists, artists, []).join(", "))
+        .replace("{link}", if(spotify_url, spotify_url, ""))
+        .replace("{status}", if(status, status, ""))
+        .replace("{tags}", 
+          if(tags,
+            tags.map("<div class='tag font-smaller'>" + value.toString().replace("#", "") + "</div>").join(""),
+            ""
+          )
+        )
+        .replace(/\[\[([^\|\]]+)\|([^\]]+)\]\]/g, 
+          "<a href='obsidian://open?file=$1'>$2</a>")
+        .replace(/\[\[([^\]]+)\]\]/g, 
+          "<a href='obsidian://open?file=$1'>$1</a>")
+    )
+  spacer_1: ""
+views:
+  - type: cards
+    name: Cards
+    order:
+      - formula.packed_music
+      - formula.spacer_1
+    image: note.cover
