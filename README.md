@@ -1,9 +1,10 @@
+> **📌 Note:** This guide uses the modern `html()` function introduced in Obsidian 1.10.3+. If you're using the older `link()` approach, see [LEGACY-README.md](LEGACY-README.md).
+
 ## Obsidian Bases Cards CSS Guide
 
 ### Contents
 
 - [Introduction](#introduction)
-- [Important Update](#important-update)
 - [The Problem](#the-problem)
     - [Fixed Heights and Absolute Positioning](#fixed-heights-and-absolute-positioning)
     - [Uncontrollable Card Height Expansion](#uncontrollable-card-height-expansion)
@@ -36,12 +37,6 @@ In the following screenshots, note the following which were not previously possi
 ![](images/full-example-wide.png)
 
 ![](images/full-example-close.png)
-
-### Important Update
-
-**Obsidian 1.10.3 (November 11, 2025) introduced an `html()` function** that renders arbitrary HTML directly in formulas. This is now the recommended approach for building card layouts, as it allows for writing more standard HTML and CSS, without fighting Obsidian default styles.
-
-**The original `link()` technique** still works but requires additional CSS to fix link icon issues also introduced in this update. See [LEGACY-README.md](LEGACY-README.md) for details.
 
 ### The Problem
 

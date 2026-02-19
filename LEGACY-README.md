@@ -6,7 +6,7 @@
 > 
 > **What changed:** Obsidian now provides an `html()` function that renders arbitrary HTML directly in formulas. This eliminates the need for the `link()` workarounds described below and allows for writing more familiar HTML and CSS.
 > 
-> **Migration:** See [Current Best Practices](README.md#current-best-practices) in the main README for examples using `html()`.
+> **Migration:** See the main [README.md](README.md) for examples using `html()`.
 > 
 > **Note:** The `link()` approach still works, but Obsidian 1.10.3 changed CSS styling for links, causing multiple link icons to appear. A CSS workaround is available in [issue #1](https://github.com/EzraMarks/obsidian-bases-css-guide/issues/1), though migrating to `html()` is recommended.
 
